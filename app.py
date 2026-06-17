@@ -1,6 +1,8 @@
 from flask import Flask, request, render_template, redirect, url_for
 import requests, json, os
 from datetime import datetime
+MAX_CONTEXT = 10  # número de mensagens de contexto
+
 
 app = Flask(__name__)
 
@@ -25,13 +27,13 @@ def chat():
 
         # Construir lista de mensagens com histórico limitado
 mensagens = []
-# Pega só as últimas 10 mensagens do histórico
-for msg in historico[-10:]:
+for msg in historico[-MAX_CONTEXT:]:
     mensagens.append({"role": "user", "content": msg["pergunta"]})
     mensagens.append({"role": "assistant", "content": msg["resposta"]})
 
 # Adicionar a nova pergunta
 mensagens.append({"role": "user", "content": prompt})
+
 
 
         headers = {
