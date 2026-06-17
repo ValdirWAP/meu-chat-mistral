@@ -61,12 +61,21 @@ else:
     ...
     resposta = data["choices"][0]["message"]["content"]
 
-    # salva no cache em memória
-    cache[prompt] = resposta
+   MAX_CACHE = 100  # número máximo de entradas no cache
 
-    # grava em arquivo
-    with open(CACHE_FILE, "w", encoding="utf-8") as f:
-        json.dump(cache, f, ensure_ascii=False, indent=2)
+# Salva no cache em memória
+cache[prompt] = resposta
+
+# Se o cache passar do limite, remove a entrada mais antiga
+if len(cache) > MAX_CACHE:
+    # remove o primeiro item inserido
+    chave_antiga = next(iter(cache))
+    del cache[chave_antiga]
+
+# Grava em arquivo
+with open(CACHE_FILE, "w", encoding="utf-8") as f:
+    json.dump(cache, f, ensure_ascii=False, indent=2)
+
 
     
     headers = {
