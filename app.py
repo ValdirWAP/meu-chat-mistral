@@ -1,66 +1,175 @@
-from flask import Flask, request, render_template, redirect, url_for
-import requests, json, os
-from datetime import datetime
+<!doctype html>
+<html>
+  <head>
+    <title>Meu Chat iA (Valdir)</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #121212;
+        color: #e0e0e0;
+        padding: 20px;
+        margin: 0;
+      }
+      h1 { color: #fff; }
+      form {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      input[type="text"], select {
+        flex: 1;
+        padding: 10px;
+        border-radius: 20px;
+        border: 1px solid #333;
+        background: #1e1e1e;
+        color: #e0e0e0;
+      }
+      button {
+        padding: 10px 15px;
+        border-radius: 20px;
+        border: none;
+        background: #4CAF50;
+        color: white;
+        cursor: pointer;
+      }
+      button:hover { background: #45a049; }
+      .chat-box {
+        max-height: 400px;
+        overflow-y: auto;
+        background: #1e1e1e;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #333;
+      }
+      .mensagem {
+        display: flex;
+        align-items: flex-start;
+        margin: 10px 0;
+        max-width: 80%;
+      }
+      .avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        margin: 0 10px;
+      }
+      .texto {
+        padding: 10px;
+        border-radius: 15px;
+        color: #fff;
+        max-width: 100%;
+      }
+      .pergunta {
+        background: #2e7d32;
+        margin-left: auto;
+        text-align: right;
+      }
+      .resposta {
+        background: #424242;
+        margin-right: auto;
+        text-align: left;
+        position: relative;
+      }
+      small {
+        color: #aaa;
+        font-size: 0.8em;
+        display: block;
+        margin-top: 5px;
+      }
+      .copy-btn {
+        background: #2196F3;
+        border: none;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 12px;
+        margin-top: 5px;
+      }
+      .copy-btn:hover {
+        background: #1976D2;
+      }
+      @media (max-width: 600px) {
+        input[type="text"], select { font-size: 14px; }
+        button { font-size: 14px; padding: 8px 12px; }
+        .mensagem { max-width: 100%; }
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  </head>
+  <body>
+    <h1>💬 Meu Chat iA Valdir</h1>
 
-app = Flask(__name__)
+    <form method="post" action="/">
+      <input type="text" name="prompt" placeholder="Digite sua pergunta" required>
+      <select name="modelo">
+        <option value="mistral-tiny">Mistral Tiny</option>
+        <option value="mistral-small">Mistral Small</option>
+        <option value="mistral-medium">Mistral Medium</option>
+      </select>
+      <button type="submit">Enviar</button>
+    </form>
 
-# Pega a chave da Mistral do ambiente (Render → Environment Variables)
-API_KEY = os.getenv("API_KEY")
-BASE_URL = "https://api.mistral.ai/v1/chat/completions"
-ARQUIVO = "conversas.json"
+    <div class="botoes">
+      <a href="/limpar"><button type="button">🧹 Limpar histórico</button></a>
+    </div>
 
-# Carregar histórico se já existir
-if os.path.exists(ARQUIVO):
-    with open(ARQUIVO, "r", encoding="utf-8") as f:
-        historico = json.load(f)
-else:
-    historico = []
+    <h2>Histórico:</h2>
+    <div class="chat-box">
+      {% for msg in historico %}
+        <div class="mensagem pergunta">
+          <div class="texto"><b>Você:</b> {{ msg.pergunta }} <br><small>{{ msg.hora }}</small></div>
+          <img src="https://cdn-icons-png.flaticon.com/512/1946/1946429.png" class="avatar">
+        </div>
+        <div class="mensagem resposta">
+          <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" class="avatar">
+          <div class="texto">
+            <b>Mistral ({{ msg.modelo }}):</b>
+            <div class="markdown">{{ msg.resposta }}</div>
+            <small>{{ msg.hora }}</small>
+            <!-- Botão copiar -->
+            <button class="copy-btn" onclick="copiarResposta(this)">Copiar resposta</button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
 
-@app.route("/", methods=["GET", "POST"])
-def chat():
-    global historico
-    if request.method == "POST":
-        prompt = request.form["prompt"]
-        modelo = request.form.get("modelo", "mistral-tiny")  # padrão tiny
-        print("Recebi:", prompt, "Modelo:", modelo)
+    <script>
+      // Rolagem automática para última mensagem
+      var chatBox = document.querySelector(".chat-box");
+      chatBox.scrollTop = chatBox.scrollHeight;
 
-        headers = {
-            "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "model": modelo,
-            "messages": [{"role": "user", "content": prompt}]
-        }
-        response = requests.post(BASE_URL, headers=headers, json=data)
-        data = response.json()
+      // Converter respostas para Markdown
+      document.querySelectorAll(".markdown").forEach(function(el) {
+        el.innerHTML = marked.parse(el.textContent);
+      });
 
-        if "choices" in data:
-            resposta = data["choices"][0]["message"]["content"]
-        else:
-            resposta = f"Erro na resposta da API: {data}"
+      // Função copiar resposta
+      function copiarResposta(btn) {
+        const resposta = btn.parentElement.querySelector(".markdown").innerText;
+        navigator.clipboard.writeText(resposta).then(() => {
+          btn.textContent = "Copiado!";
+          setTimeout(() => btn.textContent = "Copiar resposta", 2000);
+        });
+      }
+    </script>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Meu Chat iA</title>
+</head>
+<body>
+    <h1>Bem-vindo, {{ usuario }}!</h1>
 
-        timestamp = datetime.now().strftime("%d/%m/%Y %H:%M")
+    <div style="margin-bottom: 20px;">
+        <button onclick="window.location.href='/logout'">Logout</button>
+    </div>
 
-        historico.append({
-            "pergunta": prompt,
-            "resposta": resposta,
-            "hora": timestamp,
-            "modelo": modelo
-        })
-
-        with open(ARQUIVO, "w", encoding="utf-8") as f:
-            json.dump(historico, f, ensure_ascii=False, indent=2)
-
-    return render_template("index.html", historico=historico)
-
-@app.route("/limpar")
-def limpar():
-    global historico
-    historico = []
-    with open(ARQUIVO, "w", encoding="utf-8") as f:
-        json.dump(historico, f, ensure_ascii=False, indent=2)
-    return redirect(url_for("chat"))
-
-if __name__ == "__main__":
-    app.run(debug=True)
+    <form action="/chat" method="post">
+        <input type="text" name="prompt" placeholder="Digite sua pergunta..." required>
+        <button type="submit">Enviar</button>
+    </form>
+</body>
+</html>
