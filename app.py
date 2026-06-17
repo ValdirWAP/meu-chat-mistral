@@ -5,7 +5,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Pega a chave da Mistral do ambiente (Render → Environment Variables)
-API_KEY = os.getenv("API_KEY")
+API_KEY = os.getenv("Msd8ysyMx0K1X49So0mB8IokH84rLKnj")
 BASE_URL = "https://api.mistral.ai/v1/chat/completions"
 ARQUIVO = "conversas.json"
 
