@@ -3,6 +3,14 @@ import requests, json, os
 from datetime import datetime
 MAX_CONTEXT = 10  # número de mensagens de contexto
 cache = {}
+CACHE_FILE = "cache.json"
+
+# Carregar cache existente
+try:
+    with open(CACHE_FILE, "r", encoding="utf-8") as f:
+        cache = json.load(f)
+except FileNotFoundError:
+    cache = {}
 
 
 app = Flask(__name__)
@@ -46,7 +54,21 @@ else:
         mensagens.append({"role": "assistant", "content": msg["resposta"]})
 
     mensagens.append({"role": "user", "content": prompt})
+if prompt in cache:
+    resposta = cache[prompt]
+else:
+    # monta mensagens e chama API normalmente
+    ...
+    resposta = data["choices"][0]["message"]["content"]
 
+    # salva no cache em memória
+    cache[prompt] = resposta
+
+    # grava em arquivo
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(cache, f, ensure_ascii=False, indent=2)
+
+    
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json"
