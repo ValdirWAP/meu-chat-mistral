@@ -5,7 +5,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Pega a chave da Mistral do ambiente (Render → Environment Variables)
-API_KEY = os.getenv("Msd8ysyMx0K1X49So0mB8IokH84rLKnj")
+API_KEY = os.getenv("API_KEY")
 BASE_URL = "https://api.mistral.ai/v1/chat/completions"
 ARQUIVO = "conversas.json"
 
@@ -64,5 +64,3 @@ def limpar():
 if __name__ == "__main__":
     # Render usa gunicorn, mas localmente você pode rodar com Flask
     app.run(host="0.0.0.0", port=5000, debug=True)
-
-    app.run(debug=True)
