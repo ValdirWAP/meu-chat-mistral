@@ -23,14 +23,16 @@ def chat():
         prompt = request.form["prompt"]
         modelo = request.form.get("modelo", "mistral-tiny")
 
-        # Construir lista de mensagens com histórico
-        mensagens = []
-        for msg in historico:
-            mensagens.append({"role": "user", "content": msg["pergunta"]})
-            mensagens.append({"role": "assistant", "content": msg["resposta"]})
+        # Construir lista de mensagens com histórico limitado
+mensagens = []
+# Pega só as últimas 10 mensagens do histórico
+for msg in historico[-10:]:
+    mensagens.append({"role": "user", "content": msg["pergunta"]})
+    mensagens.append({"role": "assistant", "content": msg["resposta"]})
 
-        # Adicionar a nova pergunta
-        mensagens.append({"role": "user", "content": prompt})
+# Adicionar a nova pergunta
+mensagens.append({"role": "user", "content": prompt})
+
 
         headers = {
             "Authorization": f"Bearer {API_KEY}",
