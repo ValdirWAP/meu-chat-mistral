@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for
 import requests, json, os
 from datetime import datetime
 MAX_CONTEXT = 10  # número de mensagens de contexto
+cache = {}
 
 
 app = Flask(__name__)
@@ -34,6 +35,36 @@ for msg in historico[-MAX_CONTEXT:]:
 # Adicionar a nova pergunta
 mensagens.append({"role": "user", "content": prompt})
 
+if prompt in cache:
+    # Se já existe resposta no cache, usa ela
+    resposta = cache[prompt]
+else:
+    # Construir lista de mensagens com histórico limitado
+    mensagens = []
+    for msg in historico[-MAX_CONTEXT:]:
+        mensagens.append({"role": "user", "content": msg["pergunta"]})
+        mensagens.append({"role": "assistant", "content": msg["resposta"]})
+
+    mensagens.append({"role": "user", "content": prompt})
+
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": modelo,
+        "messages": mensagens
+    }
+    response = requests.post(BASE_URL, headers=headers, json=data)
+    data = response.json()
+
+    if "choices" in data:
+        resposta = data["choices"][0]["message"]["content"]
+    else:
+        resposta = f"Erro na resposta da API: {data}"
+
+    # Salva no cache
+    cache[prompt] = resposta
 
 
         headers = {
