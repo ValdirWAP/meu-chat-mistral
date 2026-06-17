@@ -1,6 +1,8 @@
 from flask import Flask, request, render_template, redirect, url_for
 import requests, json, os
 from datetime import datetime
+
+
 MAX_CONTEXT = 10  # número de mensagens de contexto
 cache = {}
 CACHE_FILE = "cache.json"
@@ -11,6 +13,11 @@ try:
         cache = json.load(f)
 except FileNotFoundError:
     cache = {}
+
+from flask import Flask, render_template, request, redirect, session, url_for
+
+app = Flask(__name__)
+app.secret_key = "segredo-super-seguro"
 
 
 app = Flask(__name__)
@@ -33,6 +40,34 @@ def chat():
     if request.method == "POST":
         prompt = request.form["prompt"]
         modelo = request.form.get("modelo", "mistral-tiny")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        usuario = request.form["usuario"]
+        senha = request.form["senha"]
+        if usuario == "valdir" and senha == "1234":
+            session["usuario"] = usuario
+            return redirect("/")
+        else:
+            return "Login inválido!"
+    return '''
+        <form method="post">
+            Usuário: <input type="text" name="usuario"><br>
+            Senha: <input type="password" name="senha"><br>
+            <input type="submit" value="Entrar">
+        </form>
+    '''
+@app.route("/")
+def home():
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+    return f"Bem-vindo, {session['usuario']}! Este é o chat protegido."
+@app.route("/logout")
+def logout():
+    session.pop("usuario", None)
+    return redirect("/login")
+
 
         # Construir lista de mensagens com histórico limitado
 mensagens = []
