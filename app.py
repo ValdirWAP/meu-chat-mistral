@@ -21,7 +21,16 @@ def chat():
     global historico
     if request.method == "POST":
         prompt = request.form["prompt"]
-        modelo = request.form.get("modelo", "mistral-tiny")  # padrão tiny
+        modelo = request.form.get("modelo", "mistral-tiny")
+
+        # Construir lista de mensagens com histórico
+        mensagens = []
+        for msg in historico:
+            mensagens.append({"role": "user", "content": msg["pergunta"]})
+            mensagens.append({"role": "assistant", "content": msg["resposta"]})
+
+        # Adicionar a nova pergunta
+        mensagens.append({"role": "user", "content": prompt})
 
         headers = {
             "Authorization": f"Bearer {API_KEY}",
@@ -29,7 +38,7 @@ def chat():
         }
         data = {
             "model": modelo,
-            "messages": [{"role": "user", "content": prompt}]
+            "messages": mensagens
         }
         response = requests.post(BASE_URL, headers=headers, json=data)
         data = response.json()
@@ -52,6 +61,7 @@ def chat():
             json.dump(historico, f, ensure_ascii=False, indent=2)
 
     return render_template("index.html", historico=historico)
+
 
 @app.route("/limpar")
 def limpar():
