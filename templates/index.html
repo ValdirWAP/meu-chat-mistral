@@ -153,23 +153,6 @@
           setTimeout(() => btn.textContent = "Copiar resposta", 2000);
         });
       }
-    </script>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>Meu Chat iA</title>
-</head>
-<body>
-    <h1>Bem-vindo, {{ usuario }}!</h1>
-
-    <div style="margin-bottom: 20px;">
-        <button onclick="window.location.href='/logout'">Logout</button>
-    </div>
-
-    <form action="/chat" method="post">
-        <input type="text" name="prompt" placeholder="Digite sua pergunta..." required>
-        <button type="submit">Enviar</button>
     </form>
 </body>
 </html>
