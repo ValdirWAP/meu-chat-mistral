@@ -4,7 +4,8 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-API_KEY = "Msd8ysyMx0K1X49So0mB8IokH84rLKnj"  # coloque sua chave da Mistral
+# Pega a chave da Mistral do ambiente (Render → Environment Variables)
+API_KEY = os.getenv("API_KEY")
 BASE_URL = "https://api.mistral.ai/v1/chat/completions"
 ARQUIVO = "conversas.json"
 
@@ -21,7 +22,6 @@ def chat():
     if request.method == "POST":
         prompt = request.form["prompt"]
         modelo = request.form.get("modelo", "mistral-tiny")  # padrão tiny
-        print("Recebi:", prompt, "Modelo:", modelo)
 
         headers = {
             "Authorization": f"Bearer {API_KEY}",
@@ -62,4 +62,7 @@ def limpar():
     return redirect(url_for("chat"))
 
 if __name__ == "__main__":
+    # Render usa gunicorn, mas localmente você pode rodar com Flask
+    app.run(host="0.0.0.0", port=5000, debug=True)
+
     app.run(debug=True)
